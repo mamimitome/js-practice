@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>復習ページ</title>
+
+    <!-- /* style.cssを読み込む
+Linkタグで外部CSSファイルを指定する
+hrefにCSSファイルのパスを書く
+index.html と同じフォルダにあるので、”style.css"だけ */ -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- ========================================
+        セクション①：挨拶ページ
+        querySelector でHTML要素を取得
+        addEventListener でイベントを検知
+        disabled でボタンを制御
+        new Data()でインスタンスを生成
+        getHours()でメソッドを呼びだず
+        textContent でプロパティを操作
+        アロー関数
+        if /else if/ else で条件分岐
+        ======================================== -->
+    <div class="card">
+      <h2>①挨拶ページ</h2>
+
+      <!-- 名前を入力する欄 -->
+      <input type="text" id="nameInput" placeholder="名前を入力してください" />
+      <!-- 最初はボタンを無効にする
+           disabled をHTML に直接書くと最初から無効になる
+           →JSでもbtn.disables = trueと書けるがHTMLに書く方がシンプル -->
+      <button id="greetBtn" disabled>挨拶する</button>
+      <!-- //挨拶を表示するエリア（最初は空） -->
+      <div id="greetResult"></div>
+    </div>
+
+    <!-- ========================================
+          セクション②：ニュース一覧
+          オブジェクトの配列
+          for...of ループ
+          innerHTML でHTMLを動的に作成
+          fetchでJSONファイルを読み込む
+          async/await で非同期
+          try /catch でエラー処理
+          ======================================== -->
+
+    <div class="card">
+      <h2>②ニュース一覧</h2>
+
+      <!-- ニュースを表示するえエリア
+            最初は「読み込み中...」と表示しておく
+            JSの処理が完了したら innerHTMLで中身を書き換える -->
+      <div id="newsContainer">読み込み中...</div>
+    </div>
+
+    <!-- script タグはbodyの閉じタグの直前に書く
+          HTMLが全部読むこまれてからJSを実行するため -->
+
+    <script>
+      // ========================================
+      // セクション①：挨拶ページの処理
+      // ========================================
+
+      // querySelector でHTML要素を取得
+      // document はHTMLページ全体を表すオブジェクト
+      // querySelectorはCSSセレクターで要素を探すメソッド
+      // # はidを意味する（CSSの書き方と同じ）
+      const nameInput = document.querySelector("#nameInput");
+      const greetBtn = document.querySelector("#greetBtn");
+      const greetResult = document.querySelector("#greetResult");
+
+      // addEventListner でイベント検知
+      // 書き方：要素.addEventListener("イベント名", () => {処理});
+      // "input":greetBtn入力欄に文字を打つたびに発動するイベント
+      nameInput.addEventListener("input", () => {
+        //   trim() は前後スペースを除去するメソッド
+        //   input.valueで入力欄に入っている文字列を取得
+        //   === ”” は『空っぽかどうか』を確認している
+        //   空っぽなら、true(無効)、文字があれば false(有効)がそのまま入る
+        greetBtn.disabled = nameInput.value.trim() === "";
+      });
+
+      // "click":ボタンをクリックしたときに発動するイベント
+      greetBtn.addEventListener("click", () => {
+        // 入力された名前を取得（前後スペースを除去）
+        const name = nameInput.value.trim();
+
+        // ---new Date() でインスタンスを生成---
+        // Date はクラス（設計図）
+        // new をつけることで「今この瞬間の日時」を持つインスタンス（実体）が作られる
+        const now = new Date();
+
+        // --- getHours() でメソッドを呼び出す---
+        // now オブジェクトのメソッドを呼び出す
+        // 時間（0〜23の数字）を取り出す
+        const hour = now.getHours();
+
+        // ---if / else if / else で条件分岐---
+        // let を使うのは後から値を入れるため
+        // const は宣言と同時に値を入れる必要があるので使えない
+        let greeting;
+
+        if (hour < 12) {
+          // 0〜11時　→ おはようございます
+          greeting = "おはようございます";
+        } else if (hour < 18) {
+          //12〜17時　→　こんにちは
+          greeting = "こんにちは";
+        } else {
+          // 18〜23時　→　こんばんは
+          greeting = "こんばんは";
+        }
+
+        // --- textContent でプロパティを操作---
+        // テキストだけ表示するときは textContent を使う
+        // innerHTML より安全（ユーザー入力をそのまま表示しても危険でない）
+        greetResult.textContent = greeting + "、" + name + "さん!";
+      });
+
+      // =====================================
+      // セクション②：ニュースの一覧処理
+      // =====================================
+      //--- async function:await  を使う関数にはscyncが必要 ---
+      async function loadNews() {
+        //--- try / catch:エラーが起きてもページとまらないようにする---
+        try {
+          //--- fetch で jsonファイルを読み込む---
+          //await:ファイルをとってくるのが終わるまで待つ
+          const response = await fetch("news.json");
+
+          //--- response.json()でjsで使える形に変換する　---
+          const json = await response.json();
+
+          //--- innerHTML でHTMLを動的に作成　---
+          let html = "<ul>";
+
+          //--- for...of ループ---
+          //jsonはオブジェクト配列。itemに一件ずつ入れる
+          for (let item of json) {
+            html += "<li>";
+            html += "<span class='date'>" + item.date + "</span>";
+            html += "<a href='" + item.link + "'>" + item.title + "</a>";
+            html += "</li>";
+          }
+
+          html += "</ul>";
+
+          // querySelevtor で表示エリアを取得して流し込む
+          document.querySelector("#newsContainer").innerHTML = html;
+        } catch (error) {
+          //エラーが起きた時の処理
+          console.log(error);
+          document.querySelector("#newsContainer").innerHTML =
+            "<span class = 'error'>読み込めませんでした</span>";
+        }
+      }
+      //関数を呼び出す（定義しただけでは実行されない）
+      loadNews();
+    </script>
+  </body>
+</html>
